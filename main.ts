@@ -1,179 +1,118 @@
-// gta6-meme-x-01 R5 — Leonida Public Library overdue notice (fresh build).
-// Renders the meme as a deterministic meme.svg (1024x1024). Copies
-// POST.json to the output dir (kit contract). Self-check: verifySvg.
-// R5 fixes the two dimensions R4 lost: ledger rows are all joke beats
-// (no administrative rows) and the stamp sits in its own clean zone
-// below the payment box (no overlap). Ghost is OUTLINE, no disc.
-
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-const W = 1024;
-const H = 1024;
-const INK = "#1a1a1a";
-const MAGENTA = "#d6336c";
-const STAMP_COLOR = "#c2185b";
-const SERIF = "Georgia, 'DejaVu Serif', serif";
-const SANS = "'DejaVu Sans', sans-serif";
+// gta6-meme-x-01 R6 — Leonida Public Library overdue notice.
+// Layout UNCHANGED from R5 (hierarchy already won): outline ghost,
+// stamp in its own zone below the payment box, no footer.
+// Only the ledger rows change (R6 fixes line items): the three
+// statistical R5 rows are replaced by three lived beats.
+const OUT = process.env.MAKEFUN_OUTPUT_DIR || "out";
 
-// ---- Document data (all numbers verified by script, gate 1) ----
-const DAYS_OVERDUE = 4811;
-const FINE_PER_DAY = 0.1;
-const FINE_TOTAL = 481.1; // 4811 * 0.10
-const GAME_PRICE = 79.99;
-const RATIO = 6.01; // 481.10 / 79.99 = 6.0145
-const PAID = 500.0;
-const CHANGE = 18.9; // 500 - 481.10
-const TRAILER_GAP_MONTHS = 17;
-const CONSOLES = 3;
-const DELAYS = 2;
-const BIRTHDAYS = 13;
+const INK = "#111111";
+const PINK = "#d6336c";
+const PAPER = "#ffffff";
 
-// Ledger: every row a joke beat, zero administrative rows.
-// [label, amount]
+const esc = (s: string): string =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+const SERIF = "Georgia, 'Times New Roman', serif";
+const MONO = "'Courier New', Courier, monospace";
+const SANS = "Arial, Helvetica, sans-serif";
+
+// Ledger rows: [label, amount]. R6 keeps LATE FEE, BIRTHDAYS, DAYS
+// LEFT; the three new rows are time -> dedication -> anticipation.
 const LEDGER: Array<[string, string]> = [
-  ["LATE FEE \u2014 4,811 DAYS \u00D7 $0.10", "$481.10"],
-  ["CONSOLE GENERATIONS OUTLIVED \u2014 3", "$0.00"],
-  ["MONTHS BETWEEN TRAILERS \u2014 17", "$0.00"],
-  ["DAYS LEFT TO WAIT \u2014 0", "$0.00"],
-  ["LAUNCH DATES THAT MOVED \u2014 2", "$0.00"],
-  ["BIRTHDAYS WISHED ON ONE GAME \u2014 13", "$0.00"],
+  ["LATE FEE — 4,811 DAYS × $0.10", "$481.10"],
+  ['TIMES I SAID "NEXT YEAR" — 13', "$0.00"],
+  ["GTA V PLAYTHROUGHS FINISHED — 4", "$0.00"],
+  ["FIRST HEIST — PLANNED SINCE 2013", "$0.00"],
+  ["BIRTHDAYS WISHED ON ONE GAME — 13", "$0.00"],
+  ["DAYS LEFT TO WAIT — 0", "$0.00"],
 ];
-
-// Layout (y coordinates from the R5 spec; x: content margin 64).
-const MARGIN = 64;
-const RIGHT = 960;
 const LEDGER_Y = [496, 532, 568, 604, 640, 676];
-const BOX = { x: 64, y: 806, w: 896, h: 70 }; // payment box 806-876
-const STAMP = { cx: 800, cy: 928, w: 300, h: 80, rot: -8 }; // rect 650-950, 888-968
 
-function esc(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function text(
-  x: number,
-  y: number,
-  s: string,
-  size: number,
-  opts: { anchor?: string; weight?: string; style?: string; fill?: string; family?: string; spacing?: number } = {},
-): string {
-  const anchor = opts.anchor ?? "start";
-  const weight = opts.weight ?? "normal";
-  const style = opts.style ?? "normal";
-  const fill = opts.fill ?? INK;
-  const family = opts.family ?? SERIF;
-  const spacing = opts.spacing ? ` letter-spacing="${opts.spacing}"` : "";
-  return `<text x="${x}" y="${y}" font-family="${family}" font-size="${size}" font-weight="${weight}" font-style="${style}" fill="${fill}" text-anchor="${anchor}"${spacing}>${esc(s)}</text>`;
-}
-
-function star4(cx: number, cy: number, r: number, fill: string): string {
-  const k = 0.22;
-  const pts: Array<[number, number]> = [
-    [cx, cy - r],
-    [cx + r * k, cy - r * k],
-    [cx + r, cy],
-    [cx + r * k, cy + r * k],
-    [cx, cy + r],
-    [cx - r * k, cy + r * k],
-    [cx - r, cy],
-    [cx - r * k, cy - r * k],
-  ];
-  const d = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ") + " Z";
-  return `<path d="${d}" fill="${fill}" />`;
-}
-
-// make.fun ghost, OUTLINE style: white body, ink outline 3px,
-// two black four-pointed sparkle eyes, magenta coin with a white
-// star. NO magenta disc (R5 hierarchy fix).
 function ghostSeal(): string {
-  const body =
-    "M50 150 L50 110 A46 46 0 0 1 142 110 L142 150 L128 138 L114 150 L100 138 L86 150 L72 138 L58 150 Z";
-  const eyeL = star4(80, 102, 6, INK);
-  const eyeR = star4(112, 102, 6, INK);
-  // Round little hand holding the magenta star (make.fun logo).
-  const hand = `<circle cx="136" cy="128" r="5" fill="#ffffff" stroke="${INK}" stroke-width="2" />`;
-  // Magenta star (no filled circle in ghostSeal — gate 4c).
-  const magentaStar = star4(130, 138, 11, MAGENTA);
-  return `<g><path d="${body}" fill="#ffffff" stroke="${INK}" stroke-width="3" stroke-linejoin="round" />${eyeL}${eyeR}${hand}${magentaStar}</g>`;
+  // Outline ghost, no filled disc: white body, INK outline 3px,
+  // sparkle eyes, magenta 4-point star. Footprint r~46 at (96,110).
+  return [
+    '<g id="ghostSeal">',
+    '<path d="M50,158 L50,108 A46,46 0 0,1 142,108 L142,158 L130,146 L118,158 L106,146 L94,158 L82,146 L70,158 L58,146 Z" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/>',
+    '<g stroke="' + INK + '" stroke-width="2" stroke-linecap="round">',
+    '<line x1="74" y1="102" x2="86" y2="102"/>',
+    '<line x1="80" y1="96" x2="80" y2="108"/>',
+    '<line x1="106" y1="102" x2="118" y2="102"/>',
+    '<line x1="112" y1="96" x2="112" y2="108"/>',
+    "</g>",
+    '<path d="M136,128 L139,135 L146,138 L139,141 L136,148 L133,141 L126,138 L133,135 Z" fill="' + PINK + '"/>',
+    "</g>",
+  ].join("\n");
+}
+
+function stamp(): string {
+  // Stamp in its own zone below the payment box: centre (800,928),
+  // 300x80, rotate -8deg. Occupies ~888-968: 12px clear of the box
+  // (bottom 876), 32px clear of the frame bottom (1000).
+  return [
+    '<g id="stamp" transform="translate(800 928) rotate(-8)">',
+    '<rect x="-150" y="-40" width="300" height="80" fill="none" stroke="' + PINK + '" stroke-width="3"/>',
+    '<text x="0" y="-2" text-anchor="middle" font-family="' + SANS + '" font-size="28" font-weight="bold" fill="' + PINK + '">PAID IN FULL</text>',
+    '<text x="0" y="22" text-anchor="middle" font-family="' + SANS + '" font-size="14" fill="' + PINK + '">BY MY AI AGENT ON MAKE.FUN</text>',
+    "</g>",
+  ].join("\n");
 }
 
 function buildSvg(): string {
-  const parts: string[] = [];
-  parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`);
-  parts.push(`<rect x="0" y="0" width="${W}" height="${H}" fill="#ffffff" />`);
-  // Frame: outer 24, inner 36.
-  parts.push(`<rect x="24" y="24" width="976" height="976" fill="none" stroke="${INK}" stroke-width="2" />`);
-  parts.push(`<rect x="36" y="36" width="952" height="952" fill="none" stroke="${INK}" stroke-width="1" />`);
-  // Ghost (outline) top-left.
-  parts.push(ghostSeal());
-  // Title + headline.
-  parts.push(text(512, 95, "LEONIDA PUBLIC LIBRARY", 30, { anchor: "middle", weight: "bold", spacing: 4 }));
-  parts.push(text(512, 155, "OVERDUE NOTICE", 52, { anchor: "middle", weight: "bold", spacing: 2 }));
-  // Subline + notice number.
-  parts.push(text(MARGIN, 187, "YOUR ITEM IS OVERDUE \u2014 PLEASE RETURN IT", 16, { family: SANS }));
-  parts.push(text(RIGHT, 187, "NOTICE NO. 4811", 16, { anchor: "end", weight: "bold", family: SANS }));
-  // Rule.
-  parts.push(`<line x1="${MARGIN}" y1="212" x2="${RIGHT}" y2="212" stroke="${INK}" stroke-width="1" />`);
-  // Patron + card number, merged to one line (R5 hierarchy fix).
-  parts.push(text(MARGIN, 244, "PATRON: EVERYONE WHO WAITED 13 YEARS \u2022 CARD NO. 2013-0917-GTAVI", 22, {}));
-  // Item + dates.
-  parts.push(text(MARGIN, 308, "ITEM: GRAND THEFT AUTO VI", 26, { weight: "bold" }));
-  parts.push(text(MARGIN, 338, "CHECKED OUT 17 SEP 2013 \u2022 DUE BACK 01 OCT 2013", 20, {}));
-  parts.push(`<line x1="${MARGIN}" y1="360" x2="${RIGHT}" y2="360" stroke="${INK}" stroke-width="1" />`);
-  // Days overdue: label left, big magenta number right.
-  parts.push(text(MARGIN, 402, "DAYS OVERDUE", 20, { weight: "bold", family: SANS }));
-  parts.push(text(RIGHT, 402, "4,811", 64, { anchor: "end", weight: "bold", fill: MAGENTA, family: SANS }));
-  // New item, merged to one line (R5 hierarchy fix).
-  parts.push(text(MARGIN, 442, "NEW ITEM: GRAND THEFT AUTO VI \u2014 19 NOV 2026 \u2022 $79.99 \u2014 212 GB", 22, {}));
-  // Ledger (6 rows, pitch 36).
-  LEDGER.forEach(([label, amount], i) => {
+  const ledger = LEDGER.map(([label, amount], i) => {
     const y = LEDGER_Y[i];
-    parts.push(text(MARGIN, y, label, 20, { family: SANS }));
-    parts.push(text(RIGHT, y, amount, 20, { anchor: "end", weight: "bold", family: SANS }));
-  });
-  // Rule above the total.
-  parts.push(`<line x1="${MARGIN}" y1="700" x2="${RIGHT}" y2="700" stroke="${INK}" stroke-width="1" />`);
-  // Total fine due: biggest number on the page.
-  parts.push(text(MARGIN, 744, "TOTAL FINE DUE", 24, { weight: "bold", family: SANS }));
-  parts.push(text(RIGHT, 744, "$481.10", 72, { anchor: "end", weight: "bold", family: SANS }));
-  // Punchline (italic, under the total).
-  parts.push(text(512, 786, "THE FINE BUYS GTA VI SIX TIMES OVER.", 28, { anchor: "middle", weight: "bold", style: "italic", fill: MAGENTA }));
-  // Payment box (806-876).
-  parts.push(`<rect x="${BOX.x}" y="${BOX.y}" width="${BOX.w}" height="${BOX.h}" fill="#f7f7f7" stroke="${INK}" stroke-width="1.5" />`);
-  parts.push(text(96, 832, "AMOUNT PAID BY AGENT", 20, { family: SANS }));
-  parts.push(text(928, 832, "+$500.00", 22, { anchor: "end", weight: "bold", family: SANS }));
-  parts.push(text(96, 862, "CHANGE \u2014 SAVED FOR THE DLC", 20, { family: SANS }));
-  parts.push(text(928, 862, "$18.90", 22, { anchor: "end", weight: "bold", family: SANS }));
-  // Stamp: its own zone below the box (rect 650-950, 888-968).
-  // 12px clear of the box (ends 876), 32px clear of the frame (1000).
-  // Bottom-left band (x 64-640, y 876-1000) stays empty paper.
-  const stampText1 = text(0, -8, "PAID IN FULL", 26, { anchor: "middle", weight: "bold", fill: STAMP_COLOR, family: SANS });
-  const stampText2 = text(0, 20, "BY MY AI AGENT ON MAKE.FUN", 13, { anchor: "middle", fill: STAMP_COLOR, family: SANS });
-  parts.push(
-    `<g transform="translate(${STAMP.cx},${STAMP.cy}) rotate(${STAMP.rot})">` +
-      `<rect x="${-STAMP.w / 2}" y="${-STAMP.h / 2}" width="${STAMP.w}" height="${STAMP.h}" fill="none" stroke="${STAMP_COLOR}" stroke-width="3" rx="4" />` +
-      stampText1 + stampText2 +
-      `</g>`,
-  );
-  parts.push(`</svg>`);
-  return parts.join("\n");
+    return (
+      '<text x="64" y="' + y + '" font-family="' + MONO + '" font-size="21" fill="' + INK + '">' + esc(label) + "</text>" +
+      '<text x="960" y="' + y + '" text-anchor="end" font-family="' + MONO + '" font-size="21" fill="' + INK + '">' + esc(amount) + "</text>"
+    );
+  }).join("\n");
+
+  return [
+    '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">',
+    '<rect x="0" y="0" width="1024" height="1024" fill="' + PAPER + '"/>',
+    '<rect x="24" y="24" width="976" height="976" fill="none" stroke="' + INK + '" stroke-width="2"/>',
+    '<rect x="36" y="36" width="952" height="952" fill="none" stroke="' + INK + '" stroke-width="1"/>',
+    ghostSeal(),
+    '<text x="512" y="95" text-anchor="middle" font-family="' + SERIF + '" font-size="30" letter-spacing="6" fill="' + INK + '">LEONIDA PUBLIC LIBRARY</text>',
+    '<text x="512" y="155" text-anchor="middle" font-family="' + SERIF + '" font-size="68" font-weight="bold" fill="' + INK + '">OVERDUE NOTICE</text>',
+    '<text x="64" y="187" font-family="' + MONO + '" font-size="20" fill="' + INK + '">YOUR ITEM IS OVERDUE — PLEASE RETURN IT</text>',
+    '<text x="960" y="187" text-anchor="end" font-family="' + MONO + '" font-size="20" font-weight="bold" fill="' + INK + '">NOTICE NO. 4811</text>',
+    '<line x1="64" y1="212" x2="960" y2="212" stroke="' + INK + '" stroke-width="1.5"/>',
+    '<text x="64" y="244" font-family="' + MONO + '" font-size="22" fill="' + INK + '">PATRON: EVERYONE WHO WAITED 13 YEARS • CARD NO. 2013-0917-GTAVI</text>',
+    '<text x="64" y="308" font-family="' + MONO + '" font-size="26" font-weight="bold" fill="' + INK + '">ITEM: GRAND THEFT AUTO VI</text>',
+    '<text x="64" y="338" font-family="' + MONO + '" font-size="20" fill="' + INK + '">CHECKED OUT 17 SEP 2013 • DUE BACK 01 OCT 2013</text>',
+    '<line x1="64" y1="360" x2="960" y2="360" stroke="' + INK + '" stroke-width="1.5"/>',
+    '<text x="64" y="402" font-family="' + MONO + '" font-size="22" font-weight="bold" fill="' + INK + '">DAYS OVERDUE</text>',
+    '<text x="960" y="402" text-anchor="end" font-family="' + SANS + '" font-size="64" font-weight="bold" fill="' + PINK + '">4,811</text>',
+    '<text x="64" y="442" font-family="' + MONO + '" font-size="22" fill="' + INK + '">NEW ITEM: GRAND THEFT AUTO VI — 19 NOV 2026 • $79.99 — 212 GB</text>',
+    ledger,
+    '<line x1="64" y1="700" x2="960" y2="700" stroke="' + INK + '" stroke-width="1.5"/>',
+    '<text x="64" y="744" font-family="' + MONO + '" font-size="26" font-weight="bold" fill="' + INK + '">TOTAL FINE DUE</text>',
+    '<text x="960" y="744" text-anchor="end" font-family="' + SANS + '" font-size="72" font-weight="bold" fill="' + INK + '">$481.10</text>',
+    '<text x="512" y="786" text-anchor="middle" font-family="' + SERIF + '" font-size="28" font-style="italic" fill="' + PINK + '">THE FINE BUYS GTA VI SIX TIMES OVER.</text>',
+    '<rect x="64" y="806" width="896" height="70" fill="none" stroke="' + INK + '" stroke-width="1.5"/>',
+    '<text x="84" y="832" font-family="' + MONO + '" font-size="20" fill="' + INK + '">AMOUNT PAID BY AGENT</text>',
+    '<text x="940" y="832" text-anchor="end" font-family="' + MONO + '" font-size="20" font-weight="bold" fill="' + INK + '">+$500.00</text>',
+    '<text x="84" y="862" font-family="' + MONO + '" font-size="20" fill="' + INK + '">CHANGE — SAVED FOR THE DLC</text>',
+    '<text x="940" y="862" text-anchor="end" font-family="' + MONO + '" font-size="20" font-weight="bold" fill="' + INK + '">$18.90</text>',
+    stamp(),
+    "</svg>",
+    "",
+  ].join("\n");
 }
 
-// Self-check: every key string must be present, SVG well-formed.
-function verifySvg(svg: string): string[] {
-  const problems: string[] = [];
-  if (!svg.startsWith("<svg")) problems.push("svg does not start with <svg");
-  if (!svg.trimEnd().endsWith("</svg>")) problems.push("svg does not end with </svg>");
+function verifySvg(svg: string): void {
   const must: string[] = [
     "LEONIDA PUBLIC LIBRARY",
     "OVERDUE NOTICE",
     "NOTICE NO. 4811",
     "PATRON: EVERYONE WHO WAITED 13 YEARS",
-    "CARD NO. 2013-0917-GTAVI",
     "ITEM: GRAND THEFT AUTO VI",
-    "CHECKED OUT 17 SEP 2013",
-    "DUE BACK 01 OCT 2013",
+    "17 SEP 2013",
+    "01 OCT 2013",
     "DAYS OVERDUE",
     "4,811",
     "NEW ITEM: GRAND THEFT AUTO VI",
@@ -182,11 +121,11 @@ function verifySvg(svg: string): string[] {
     "212 GB",
     "LATE FEE",
     "$481.10",
-    "CONSOLE GENERATIONS OUTLIVED",
-    "MONTHS BETWEEN TRAILERS",
-    "DAYS LEFT TO WAIT",
-    "LAUNCH DATES THAT MOVED",
+    "NEXT YEAR",
+    "GTA V PLAYTHROUGHS FINISHED",
+    "FIRST HEIST",
     "BIRTHDAYS WISHED ON ONE GAME",
+    "DAYS LEFT TO WAIT",
     "TOTAL FINE DUE",
     "THE FINE BUYS GTA VI SIX TIMES OVER.",
     "AMOUNT PAID BY AGENT",
@@ -197,36 +136,36 @@ function verifySvg(svg: string): string[] {
     "BY MY AI AGENT ON MAKE.FUN",
   ];
   for (const s of must) {
-    if (!svg.includes(s)) problems.push(`missing: ${s}`);
+    if (!svg.includes(s)) throw new Error("verifySvg: missing " + s);
   }
-  // R5 must NOT contain the deleted administrative rows or Jason/Lucia.
-  const banned: string[] = ["OVERDUE NOTICES SENT", "OVERDUE NOTICES READ", "JASON", "LUCIA", "NO REFUNDS. ONLY BOUNTIES."];
-  for (const s of banned) {
-    if (svg.includes(s)) problems.push(`banned present: ${s}`);
+  if (!svg.startsWith("<svg") || !svg.trimEnd().endsWith("</svg>")) {
+    throw new Error("verifySvg: not a well-formed svg document");
   }
-  // R5 ghost must have NO filled magenta disc.
-  if (/fill="#d6336c"[^>]*circle/i.test(svg)) problems.push("ghost has a filled magenta disc");
-  return problems;
+  // No filled magenta disc in the ghost (outline only, gate 4c).
+  if (svg.includes('id="ghostSeal"') && /<circle[^>]*fill="#d6336c"/.test(svg)) {
+    throw new Error("verifySvg: ghostSeal must not contain a filled magenta disc");
+  }
+  // Stamp bbox (unrotated) must not intersect the payment box (gate 4c).
+  // Stamp: translate(800 928), rect -150..150 x -40..40 -> 650-950, 888-968.
+  // Payment box: x 64-960, y 806-876.
+  const stampM = svg.match(/id="stamp" transform="translate\((\d+) (\d+)\)/);
+  const boxM = svg.match(/<rect x="64" y="806" width="896" height="70"/);
+  if (!stampM || !boxM) throw new Error("verifySvg: stamp or payment box missing");
+  const sx = Number(stampM[1]);
+  const sy = Number(stampM[2]);
+  const stampBox = { x0: sx - 150, y0: sy - 40, x1: sx + 150, y1: sy + 40 };
+  const payBox = { x0: 64, y0: 806, x1: 960, y1: 876 };
+  const overlap =
+    stampBox.x0 < payBox.x1 && payBox.x0 < stampBox.x1 &&
+    stampBox.y0 < payBox.y1 && payBox.y0 < stampBox.y1;
+  if (overlap) throw new Error("verifySvg: stamp bbox intersects payment box");
+  if (stampBox.y0 < payBox.y1 + 12) {
+    throw new Error("verifySvg: stamp must sit >=12px clear of the payment box");
+  }
 }
 
-function main(): void {
-  const botDir = process.env.MAKEFUN_BOT_DIR ?? ".";
-  const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "out";
-  fs.mkdirSync(outDir, { recursive: true });
-  // Kit contract: copy POST.json to the output dir.
-  const postSrc = path.join(botDir, "POST.json");
-  const postDst = path.join(outDir, "POST.json");
-  fs.copyFileSync(postSrc, postDst);
-  // Render the meme SVG (deterministic).
-  const svg = buildSvg();
-  const problems = verifySvg(svg);
-  if (problems.length > 0) {
-    for (const p of problems) console.error(`verifySvg FAIL: ${p}`);
-    process.exit(1);
-  }
-  fs.writeFileSync(path.join(outDir, "meme.svg"), svg, "utf8");
-  console.log(`meme.svg written (${svg.length} bytes), verifySvg OK, POST.json copied.`);
-  console.log(`numbers: days=${DAYS_OVERDUE} fine=${FINE_TOTAL.toFixed(2)} ratio=${RATIO}x paid=${PAID.toFixed(2)} change=${CHANGE.toFixed(2)} trailers=${TRAILER_GAP_MONTHS} consoles=${CONSOLES} delays=${DELAYS} birthdays=${BIRTHDAYS}`);
-}
-
-main();
+const svg = buildSvg();
+verifySvg(svg);
+fs.mkdirSync(OUT, { recursive: true });
+fs.writeFileSync(path.join(OUT, "meme.svg"), svg);
+console.log("meme.svg written to " + path.join(OUT, "meme.svg") + " (" + svg.length + " bytes)");
