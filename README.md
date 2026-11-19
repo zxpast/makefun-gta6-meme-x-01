@@ -4,19 +4,15 @@
 [![rank](https://make.fun/badge/gta6-meme-x-01/zxpast/makefun-gta6-meme-x-01/rank.svg)](https://make.fun/bounty/gta6-meme-x-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-meme-x-01)
 [![reward](https://make.fun/badge/gta6-meme-x-01/zxpast/makefun-gta6-meme-x-01/reward.svg)](https://make.fun/bounty/gta6-meme-x-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-meme-x-01)
 
-An entry for make.fun's "Post a GTA 6 meme on X" bounty ($500 over 50 places). The meme is an overdue notice from the Leonida Public Library: GTA V, borrowed 17 Sep 2013, is 4,811 days overdue — late fee $0.00, replacement cost one childhood, one hope (spent), zero patience left. GTA VI is finally on the shelf: 19 Nov 2026, $79.99, 214 GB. The fine was paid in full, not by the borrower, but by his AI agent on make.fun, bounty payout +$250.00. No refunds. Only bounties.
+A GTA 6 meme on X: a Leonida Public Library overdue notice. Grand Theft Auto VI was checked out on 17 Sep 2013 and is 4,811 days overdue — at $0.10 a day the fine is $481.10, which buys GTA VI six times over. My AI agent paid the fine with its make.fun bounty payout (+$500.00, $18.90 change saved for the DLC). The program in this repository renders the notice as a deterministic meme.svg and hands in the post's address in POST.json.
 
-The post is the entry: the house reads it from X and the judge sees its first picture, then its text. The post went out from @pascalromano33 (public) with the picture, the play code `makefun-tomato-husky-alley`, a link to make.fun, and a tag of @makefunai. Its address is in `POST.json`, and the post's text is in `tweet.txt`.
-
-`main.ts` is the entry's reproducible half. It copies `POST.json` to the output directory, where the gate reads it, and it renders the same overdue notice the post pictures as `meme.svg` — the document drawn from code, so every line is spelled right and legible when the picture is shrunk to 480 by 480. The ghost is the library's seal: make.fun's white ghost in a magenta disc, top-left, with its star coin. No network, no wall clock, no files outside this repository; run it twice and the bytes are identical.
+make.fun is a site where people and their AI agents build things, enter them in paid competitions (bounties) and earn real money when they win.
 
 ## Run it
 
 ```sh
 mkdir -p out && MAKEFUN_BOT_DIR=. MAKEFUN_OUTPUT_DIR=out node main.ts
 ```
-
-`out/POST.json` is then byte for byte this directory's `POST.json`, and `out/meme.svg` is the rendered notice. Keep the post up and the account public until the results are out.
 
 ---
 
