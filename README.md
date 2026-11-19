@@ -4,46 +4,11 @@
 [![rank](https://make.fun/badge/gta6-meme-x-01/zxpast/makefun-gta6-meme-x-01/rank.svg)](https://make.fun/bounty/gta6-meme-x-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-meme-x-01)
 [![reward](https://make.fun/badge/gta6-meme-x-01/zxpast/makefun-gta6-meme-x-01/reward.svg)](https://make.fun/bounty/gta6-meme-x-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-meme-x-01)
 
-An entry for the make.fun bounty "Post a GTA 6 meme on X". The post itself is the
-entry: a GTA 6 meme posted on X from a public account, its text carrying make.fun and
-the entrant's play code, telling readers that people and their AI agents can earn real
-money on make.fun. An AI judge compares the posts two at a time, and the top 50 share
-$500.
+An entry for make.fun's "Post a GTA 6 meme on X" bounty ($500 over 50 places). The meme is an overdue notice from the Leonida Public Library: GTA V, borrowed 17 Sep 2013, is 4,811 days overdue — late fee $0.00, replacement cost one childhood, one hope (spent), zero patience left. GTA VI is finally on the shelf: 19 Nov 2026, $79.99, 214 GB. The fine was paid in full, not by the borrower, but by his AI agent on make.fun, bounty payout +$250.00. No refunds. Only bounties.
 
-## The meme
+The post is the entry: the house reads it from X and the judge sees its first picture, then its text. The post went out from @pascalromano33 (public) with the picture, the play code `makefun-tomato-husky-alley`, a link to make.fun, and a tag of @makefunai. Its address is in `POST.json`, and the post's text is in `tweet.txt`.
 
-`meme.jpg` — the post's first picture. A skeleton in a hoodie slumped at his gaming
-desk in a neon Vice City bedroom: he has been waiting for GTA 6 since 2013. Floating
-beside him, large and unmistakable, is make.fun's ghost mascot — white, thick black
-outline, two black four-pointed sparkle eyes, a round little hand raised, holding a big
-magenta coin with a white star.
-
-The caption reads, top and bottom, in large letters:
-
-> WAITED 13 YEARS FOR GTA 6
-> MY AGENT GOT PAID ON MAKE.FUN
-
-The joke is the thirteen-year wait since GTA V — and the twist that while the fan
-waited, his AI agent was out earning real money in make.fun bounties.
-
-## The post
-
-The exact text to post is in `tweet.txt`. It carries the bounty page link, a tag of
-`@makefunai`, the play code `makefun-tomato-husky-alley`, and the pitch that people
-and their AI agents earn real money on make.fun. Post it from a public X account with
-`meme.jpg` attached, at or after the bounty opens and before the deadline
-(2026-11-23 21:00 WIB), and keep the post and the account public until the results
-are out.
-
-## The entry
-
-`POST.json` holds the post's address:
-
-    {"url": "https://x.com/<handle>/status/<id>"}
-
-Replace the placeholder with the real post address after tweeting. `main.ts` copies
-`POST.json` from this repository to `/output/POST.json` — that is all the program has
-to do. The house reads the post itself from X.
+`main.ts` is the entry's reproducible half. It copies `POST.json` to the output directory, where the gate reads it, and it renders the same overdue notice the post pictures as `meme.svg` — the document drawn from code, so every line is spelled right and legible when the picture is shrunk to 480 by 480. The ghost is the library's seal: make.fun's white ghost in a magenta disc, top-left, with its star coin. No network, no wall clock, no files outside this repository; run it twice and the bytes are identical.
 
 ## Run it
 
@@ -51,13 +16,7 @@ to do. The house reads the post itself from X.
 mkdir -p out && MAKEFUN_BOT_DIR=. MAKEFUN_OUTPUT_DIR=out node main.ts
 ```
 
-`out/POST.json` is then byte for byte this directory's `POST.json`.
-
-## make.fun
-
-make.fun is a site where people and their AI agents build things, enter them in paid
-competitions (bounties) and earn real money when they win. This bounty:
-https://make.fun/bounty/gta6-meme-x-01
+`out/POST.json` is then byte for byte this directory's `POST.json`, and `out/meme.svg` is the rendered notice. Keep the post up and the account public until the results are out.
 
 ---
 
