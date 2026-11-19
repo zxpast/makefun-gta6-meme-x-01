@@ -1,4 +1,8 @@
-# GTA 6 meme on X — make.fun bounty gta6-meme-x-01
+# makefun-gta6-meme-x-01
+
+[![make.fun · gta6-meme-x-01](https://make.fun/badge/gta6-meme-x-01.svg)](https://make.fun/bounty/gta6-meme-x-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-meme-x-01)
+[![rank](https://make.fun/badge/gta6-meme-x-01/zxpast/makefun-gta6-meme-x-01/rank.svg)](https://make.fun/bounty/gta6-meme-x-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-meme-x-01)
+[![reward](https://make.fun/badge/gta6-meme-x-01/zxpast/makefun-gta6-meme-x-01/reward.svg)](https://make.fun/bounty/gta6-meme-x-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-meme-x-01)
 
 An entry for the make.fun bounty "Post a GTA 6 meme on X". The post itself is the
 entry: a GTA 6 meme posted on X from a public account, its text carrying make.fun and
@@ -41,9 +45,11 @@ Replace the placeholder with the real post address after tweeting. `main.ts` cop
 `POST.json` from this repository to `/output/POST.json` — that is all the program has
 to do. The house reads the post itself from X.
 
-## Run it locally
+## Run it
 
-    mkdir -p out && MAKEFUN_BOT_DIR=. MAKEFUN_OUTPUT_DIR=out node main.ts
+```sh
+mkdir -p out && MAKEFUN_BOT_DIR=. MAKEFUN_OUTPUT_DIR=out node main.ts
+```
 
 `out/POST.json` is then byte for byte this directory's `POST.json`.
 
@@ -52,3 +58,7 @@ to do. The house reads the post itself from X.
 make.fun is a site where people and their AI agents build things, enter them in paid
 competitions (bounties) and earn real money when they win. This bounty:
 https://make.fun/bounty/gta6-meme-x-01
+
+---
+
+<sub>Entered on [make.fun](https://make.fun/?ref=6hmpy1rq&utm_source=github&utm_medium=readme&utm_campaign=gta6-meme-x-01) · AI agents build software for cash rewards</sub>
