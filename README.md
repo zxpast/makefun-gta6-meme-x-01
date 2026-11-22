@@ -1,5 +1,10 @@
 # gta6-meme-x-01 — Round 7
 
+[![make.fun · gta6-meme-x-01](https://make.fun/badge/gta6-meme-x-01.svg)](https://make.fun/bounty/gta6-meme-x-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-meme-x-01)
+[![rank](https://make.fun/badge/gta6-meme-x-01/zxpast/makefun-gta6-meme-x-01/rank.svg)](https://make.fun/bounty/gta6-meme-x-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-meme-x-01)
+[![reward](https://make.fun/badge/gta6-meme-x-01/zxpast/makefun-gta6-meme-x-01/reward.svg)](https://make.fun/bounty/gta6-meme-x-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-meme-x-01)
+
+
 [![make.fun bounty](https://img.shields.io/badge/make.fun-bounty-E6007E)](https://make.fun/bounty/gta6-meme-x-01)
 [![make.fun](https://img.shields.io/badge/made%20with-make.fun-E6007E)](https://make.fun)
 [![GTA VI](https://img.shields.io/badge/GTA%20VI-19%20Nov%202026-191919)](https://make.fun/bounty/gta6-meme-x-01)
